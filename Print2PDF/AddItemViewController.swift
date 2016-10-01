@@ -17,7 +17,7 @@ class AddItemViewController: UIViewController, UITextFieldDelegate {
     
     var currentTextfield: UITextField!
     
-    var saveCompletionHandler: ((itemDescription: String, price: String) -> Void)!
+    var saveCompletionHandler: ((_ itemDescription: String, _ price: String) -> Void)!
     
     
     override func viewDidLoad() {
@@ -59,7 +59,7 @@ class AddItemViewController: UIViewController, UITextFieldDelegate {
     }
     
     
-    func presentAddItemViewControllerInViewController(originatingViewController: UIViewController, saveItemCompletionHandler: (itemDescription: String, price: String) -> Void) {
+    func presentAddItemViewControllerInViewController(originatingViewController: UIViewController, saveItemCompletionHandler: @escaping (_ itemDescription: String, _ price: String) -> Void) {
         saveCompletionHandler = saveItemCompletionHandler
         originatingViewController.navigationController?.pushViewController(self, animated: true)
     }
@@ -67,16 +67,17 @@ class AddItemViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: IBAction Methods
     
-    @IBAction func saveItem(sender: AnyObject) {
-        if txtItemDescription.text?.characters.count > 0 &&
-            txtPrice.text?.characters.count > 0 {
+    @IBAction func saveItem(_ sender: AnyObject) {
+        if (txtItemDescription.text?.characters.count)! > 0 &&
+            (txtPrice.text?.characters.count)! > 0 {
             
             if saveCompletionHandler != nil {
                 // Call the save completion handler to pass the item description and the price back to the CreatorViewController object.
-                saveCompletionHandler(itemDescription: txtItemDescription.text!, price: txtPrice.text!)
+                
+                saveCompletionHandler(_ : txtItemDescription.text!, _: txtPrice.text!)
                 
                 // Pop the view controller.
-                navigationController?.popViewControllerAnimated(true)
+                _ = navigationController?.popViewController(animated: true)
             }
         }
     }
@@ -85,13 +86,13 @@ class AddItemViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: UITextFieldDelegate Methods
     
-    func textFieldShouldBeginEditing(textField: UITextField) -> Bool {
+    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         currentTextfield = textField
         return true
     }
     
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         if textField == txtItemDescription {
             textField.resignFirstResponder()
             txtPrice.becomeFirstResponder()

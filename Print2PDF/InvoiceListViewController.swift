@@ -26,10 +26,10 @@ class InvoiceListViewController: UIViewController, UITableViewDelegate, UITableV
     }
 
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if let inv = NSUserDefaults.standardUserDefaults().objectForKey("invoices") {
+        if let inv = UserDefaults.standard.object(forKey: "invoices") {
             invoices = inv as? [[String: AnyObject]]
             tblInvoices.reloadData()
         }
@@ -46,10 +46,10 @@ class InvoiceListViewController: UIViewController, UITableViewDelegate, UITableV
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let identifier = segue.identifier {
             if identifier == "idSeguePresentPreview" {
-                let previewViewController = segue.destinationViewController as! PreviewViewController
+                let previewViewController = segue.destination as! PreviewViewController
                 previewViewController.invoiceInfo = invoices[selectedInvoiceIndex]
             }
         }
@@ -59,23 +59,23 @@ class InvoiceListViewController: UIViewController, UITableViewDelegate, UITableV
     
     // MARK: IBAction Methods
     
-    @IBAction func createInvoice(sender: AnyObject) {
-        let creatorViewController = storyboard?.instantiateViewControllerWithIdentifier("idCreateInvoice") as! CreatorViewController
-        creatorViewController.presentCreatorViewControllerInViewController(self) { (invoiceNumber, recipientInfo, totalAmount, items) in
-            dispatch_async(dispatch_get_main_queue(), { 
+    @IBAction func createInvoice(_ sender: AnyObject) {
+        let creatorViewController = storyboard?.instantiateViewController(withIdentifier: "idCreateInvoice") as! CreatorViewController
+        creatorViewController.presentCreatorViewControllerInViewController(originalViewController: self) { (invoiceNumber, recipientInfo, totalAmount, items) in
+            DispatchQueue.main.async {
                 if self.invoices == nil {
                     self.invoices = [[String: AnyObject]]()
                 }
                 
                 // Add the new invoice data to the invoices array.
-                self.invoices.append(["invoiceNumber": invoiceNumber, "invoiceDate": self.formatAndGetCurrentDate(), "recipientInfo": recipientInfo, "totalAmount": totalAmount, "items": items])
+                self.invoices.append(["invoiceNumber": invoiceNumber as AnyObject, "invoiceDate": self.formatAndGetCurrentDate() as AnyObject, "recipientInfo": recipientInfo as AnyObject, "totalAmount": totalAmount as AnyObject, "items": items as AnyObject])
                 
                 // Update the user defaults with the new invoice.
-                NSUserDefaults.standardUserDefaults().setObject(self.invoices, forKey: "invoices")
+                UserDefaults.standard.set(self.invoices, forKey: "invoices")
                 
                 // Reload the tableview.
                 self.tblInvoices.reloadData()
-            })
+            }
         }
     }
     
@@ -83,29 +83,28 @@ class InvoiceListViewController: UIViewController, UITableViewDelegate, UITableV
     // MARK: Custom Methods
     
     func formatAndGetCurrentDate() -> String {
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.dateStyle = NSDateFormatterStyle.MediumStyle
-        return dateFormatter.stringFromDate(NSDate())
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = DateFormatter.Style.medium
+        return dateFormatter.string(from: NSDate() as Date)
     }
     
     
     // MARK: UITableView Delegate and Datasource Methods
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return (invoices != nil) ? invoices.count : 0
     }
     
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cell: UITableViewCell! = tableView.dequeueReusableCellWithIdentifier("invoiceCell", forIndexPath: indexPath)
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        var cell: UITableViewCell! = tableView.dequeueReusableCell(withIdentifier: "invoiceCell", for: indexPath as IndexPath)
         
         if cell == nil {
-            cell = UITableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "invoiceCell")
+            cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: "invoiceCell")
         }
         
         cell.textLabel?.text = "\(invoices[indexPath.row]["invoiceNumber"] as! String) - \(invoices[indexPath.row]["invoiceDate"] as! String) - \(invoices[indexPath.row]["totalAmount"] as! String)"
@@ -114,22 +113,22 @@ class InvoiceListViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     
-    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60.0
     }
     
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedInvoiceIndex = indexPath.row
-        performSegueWithIdentifier("idSeguePresentPreview", sender: self)
+        performSegue(withIdentifier: "idSeguePresentPreview", sender: self)
     }
     
     
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == UITableViewCellEditingStyle.Delete {
-            invoices.removeAtIndex(indexPath.row)
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == UITableViewCellEditingStyle.delete {
+            invoices.remove(at: indexPath.row)
             tblInvoices.reloadData()
-            NSUserDefaults.standardUserDefaults().setObject(self.invoices, forKey: "invoices")
+            UserDefaults.standard.set(self.invoices, forKey: "invoices")
         }
     }
     
