@@ -10,11 +10,11 @@ import UIKit
 
 class InvoiceComposer: NSObject {
 
-    let pathToInvoiceHTMLTemplate = NSBundle.mainBundle().pathForResource("invoice", ofType: "html")
+    let pathToInvoiceHTMLTemplate = Bundle.main.path(forResource: "invoice", ofType: "html")
     
-    let pathToSingleItemHTMLTemplate = NSBundle.mainBundle().pathForResource("single_item", ofType: "html")
+    let pathToSingleItemHTMLTemplate = Bundle.main.path(forResource: "single_item", ofType: "html")
     
-    let pathToLastItemHTMLTemplate = NSBundle.mainBundle().pathForResource("last_item", ofType: "html")
+    let pathToLastItemHTMLTemplate = Bundle.main.path(forResource: "last_item", ofType: "html")
     
     let senderInfo = "Gabriel Theodoropoulos<br>123 Somewhere Str.<br>10000 - MyCity<br>MyCountry"
     
@@ -44,28 +44,28 @@ class InvoiceComposer: NSObject {
             
             // Replace all the placeholders with real values except for the items.
             // The logo image.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#LOGO_IMAGE#", withString: logoImageURL)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#LOGO_IMAGE#", with: logoImageURL)
             
             // Invoice number.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#INVOICE_NUMBER#", withString: invoiceNumber)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#INVOICE_NUMBER#", with: invoiceNumber)
             
             // Invoice date.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#INVOICE_DATE#", withString: invoiceDate)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#INVOICE_DATE#", with: invoiceDate)
             
             // Due date (we leave it blank by default).
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#DUE_DATE#", withString: dueDate)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#DUE_DATE#", with: dueDate)
             
             // Sender info.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#SENDER_INFO#", withString: senderInfo)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#SENDER_INFO#", with: senderInfo)
             
             // Recipient info.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#RECIPIENT_INFO#", withString: recipientInfo.stringByReplacingOccurrencesOfString("\n", withString: "<br>"))
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#RECIPIENT_INFO#", with: recipientInfo.replacingOccurrences(of: "\n", with: "<br>"))
             
             // Payment method.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#PAYMENT_METHOD#", withString: paymentMethod)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#PAYMENT_METHOD#", with: paymentMethod)
             
             // Total amount.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#TOTAL_AMOUNT#", withString: totalAmount)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#TOTAL_AMOUNT#", with: totalAmount)
             
             // The invoice items will be added by using a loop.
             var allItems = ""
@@ -84,18 +84,18 @@ class InvoiceComposer: NSObject {
                 }
                 
                 // Replace the description and price placeholders with the actual values.
-                itemHTMLContent = itemHTMLContent.stringByReplacingOccurrencesOfString("#ITEM_DESC#", withString: items[i]["item"]!)
+                itemHTMLContent = itemHTMLContent.replacingOccurrences(of: "#ITEM_DESC#", with: items[i]["item"]!)
                 
                 // Format each item's price as a currency value.
-                let formattedPrice = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency(items[i]["price"]!)
-                itemHTMLContent = itemHTMLContent.stringByReplacingOccurrencesOfString("#PRICE#", withString: formattedPrice)
+                let formattedPrice = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency(value: items[i]["price"]!)
+                itemHTMLContent = itemHTMLContent.replacingOccurrences(of: "#PRICE#", with: formattedPrice)
                 
                 // Add the item's HTML code to the general items string.
                 allItems += itemHTMLContent
             }
             
             // Set the items.
-            HTMLContent = HTMLContent.stringByReplacingOccurrencesOfString("#ITEMS#", withString: allItems)
+            HTMLContent = HTMLContent.replacingOccurrences(of: "#ITEMS#", with: allItems)
             
             // The HTML code is ready.
             return HTMLContent
@@ -113,12 +113,12 @@ class InvoiceComposer: NSObject {
         let printPageRenderer = CustomPrintPageRenderer()
         
         let printFormatter = UIMarkupTextPrintFormatter(markupText: HTMLContent)
-        printPageRenderer.addPrintFormatter(printFormatter, startingAtPageAtIndex: 0)
+        printPageRenderer.addPrintFormatter(printFormatter, startingAtPageAt: 0)
         
-        let pdfData = drawPDFUsingPrintPageRenderer(printPageRenderer)
+        let pdfData = drawPDFUsingPrintPageRenderer(printPageRenderer: printPageRenderer)
         
         pdfFilename = "\(AppDelegate.getAppDelegate().getDocDir())/Invoice\(invoiceNumber).pdf"
-        pdfData.writeToFile(pdfFilename, atomically: true)
+        pdfData?.write(toFile: pdfFilename, atomically: true)
         
         print(pdfFilename)
     }
@@ -127,11 +127,11 @@ class InvoiceComposer: NSObject {
     func drawPDFUsingPrintPageRenderer(printPageRenderer: UIPrintPageRenderer) -> NSData! {
         let data = NSMutableData()
         
-        UIGraphicsBeginPDFContextToData(data, CGRectZero, nil)
+        UIGraphicsBeginPDFContextToData(data, CGRect.zero, nil)
         
         UIGraphicsBeginPDFPage()
         
-        printPageRenderer.drawPageAtIndex(0, inRect: UIGraphicsGetPDFContextBounds())
+        printPageRenderer.drawPage(at: 0, in: UIGraphicsGetPDFContextBounds())
         
         UIGraphicsEndPDFContext()
         

@@ -23,7 +23,7 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     var totalAmount = "0"
     
-    var saveCompletionHandler: ((invoiceNumber: String, recipientInfo: String, totalAmount: String, items: [[String: String]]) -> Void)!
+    var saveCompletionHandler: ((_ invoiceNumber: String, _ recipientInfo: String, _ totalAmount: String, _ items: [[String: String]]) -> Void)!
     
     var firstAppeared = true
     
@@ -44,7 +44,7 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     }
 
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         if firstAppeared {
@@ -74,11 +74,11 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     // MARK: IBAction Methods
     
-    @IBAction func addItem(sender: AnyObject) {
-        let addItemViewController = storyboard?.instantiateViewControllerWithIdentifier("idAddItem") as! AddItemViewController
-        addItemViewController.presentAddItemViewControllerInViewController(self) { (itemDescription, price) in
+    @IBAction func addItem(_ sender: AnyObject) {
+        let addItemViewController = storyboard?.instantiateViewController(withIdentifier: "idAddItem") as! AddItemViewController
+        addItemViewController.presentAddItemViewControllerInViewController(originatingViewController: self) { (itemDescription, price) in
             
-            dispatch_async(dispatch_get_main_queue(), { 
+            DispatchQueue.main.async {
                 if self.items == nil {
                     self.items = [[String: String]]()
                 }
@@ -87,29 +87,29 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
                 self.tblInvoiceItems.reloadData()
                 
                 self.displayTotalAmount()
-            })
+            }
         }
     }
     
     
-    @IBAction func saveInvoice(sender: AnyObject) {
+    @IBAction func saveInvoice(_ sender: AnyObject) {
         if saveCompletionHandler != nil {
             if nextNumberAsString != nil {
-                NSUserDefaults.standardUserDefaults().setObject(nextNumberAsString, forKey: "nextInvoiceNumber")
+                UserDefaults.standard.set(nextNumberAsString, forKey: "nextInvoiceNumber")
             }
             else {
-                NSUserDefaults.standardUserDefaults().setObject("002", forKey: "nextInvoiceNumber")
+                UserDefaults.standard.set("002", forKey: "nextInvoiceNumber")
             }
             
-            saveCompletionHandler(invoiceNumber: invoiceNumber, recipientInfo: tvRecipientInfo.text, totalAmount: bbiTotal.title!, items: items)
-            navigationController?.popViewControllerAnimated(true)
+            saveCompletionHandler(_: invoiceNumber, _: tvRecipientInfo.text, _: bbiTotal.title!, _: items)
+            _ = navigationController?.popViewController(animated: true)
         }
     }
     
     
     // MARK: Custom Methods
     
-    func presentCreatorViewControllerInViewController(originalViewController: UIViewController, saveCompletionHandler: (invoiceNumber: String, recipientInfo: String, totalAmount: String, items: [[String: String]]) -> Void) {
+    func presentCreatorViewControllerInViewController(originalViewController: UIViewController, saveCompletionHandler: @escaping (_ invoiceNumber: String, _ recipientInfo: String, _ totalAmount: String, _ items: [[String: String]]) -> Void) {
         self.saveCompletionHandler = saveCompletionHandler
         originalViewController.navigationController?.pushViewController(self, animated: true)
     }
@@ -117,7 +117,7 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     func determineInvoiceNumber() {
         // Get the invoice number from the user defaults if exists.
-        if let nextInvoiceNumber = NSUserDefaults.standardUserDefaults().objectForKey("nextInvoiceNumber") {
+        if let nextInvoiceNumber = UserDefaults.standard.object(forKey: "nextInvoiceNumber") {
             invoiceNumber = nextInvoiceNumber as! String
             
             // Save the next invoice number to the user defaults.
@@ -147,12 +147,12 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
         var total: Double = 0.0
         if items != nil {
             for invoiceItem in items {
-                let priceAsNumber = NSNumberFormatter().numberFromString(invoiceItem["price"]!)
+                let priceAsNumber = NumberFormatter().number(from: invoiceItem["price"]!)
                 total += Double(priceAsNumber!)
             }
         }
         
-        totalAmount = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency("\(total)")
+        totalAmount = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency(value: "\(total)")
     }
     
     
@@ -163,7 +163,7 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     
     func dismissKeyboard() {
-        if tvRecipientInfo.isFirstResponder() {
+        if tvRecipientInfo.isFirstResponder {
             tvRecipientInfo.resignFirstResponder()
         }
     }
@@ -171,37 +171,36 @@ class CreatorViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     // MARK: UITableView Delegate and Datasource Methods
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return (items != nil) ? items.count : 0
     }
     
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cell: UITableViewCell! = tableView.dequeueReusableCellWithIdentifier("itemCell", forIndexPath: indexPath)
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        var cell: UITableViewCell! = tableView.dequeueReusableCell(withIdentifier: "itemCell", for: indexPath as IndexPath)
         
         if cell == nil {
-            cell = UITableViewCell(style: UITableViewCellStyle.Value1, reuseIdentifier: "itemCell")
+            cell = UITableViewCell(style: UITableViewCellStyle.value1, reuseIdentifier: "itemCell")
         }
         
         cell.textLabel?.text = items[indexPath.row]["item"]
-        cell.detailTextLabel?.text = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency(items[indexPath.row]["price"]!)
+        cell.detailTextLabel?.text = AppDelegate.getAppDelegate().getStringValueFormattedAsCurrency(value: items[indexPath.row]["price"]!)
         
         return cell
     }
     
-    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60.0
     }
     
-    
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == UITableViewCellEditingStyle.Delete {
-            items.removeAtIndex(indexPath.row)
+
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == UITableViewCellEditingStyle.delete {
+            items.remove(at: indexPath.row)
             tblInvoiceItems.reloadData()
             displayTotalAmount()
         }
