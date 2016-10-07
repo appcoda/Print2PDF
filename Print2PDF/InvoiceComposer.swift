@@ -117,7 +117,7 @@ class InvoiceComposer: NSObject {
         
         let pdfData = drawPDFUsingPrintPageRenderer(printPageRenderer: printPageRenderer)
         
-        pdfFilename = "\(AppDelegate.getAppDelegate().getDocDir())/Invoice\(invoiceNumber).pdf"
+        pdfFilename = "\(AppDelegate.getAppDelegate().getDocDir())/Invoice\(invoiceNumber!).pdf"
         pdfData?.write(toFile: pdfFilename, atomically: true)
         
         print(pdfFilename)
