@@ -128,10 +128,10 @@ class InvoiceComposer: NSObject {
         let data = NSMutableData()
         
         UIGraphicsBeginPDFContextToData(data, CGRect.zero, nil)
-        
-        UIGraphicsBeginPDFPage()
-        
-        printPageRenderer.drawPage(at: 0, in: UIGraphicsGetPDFContextBounds())
+        for i in 0..<printPageRenderer.numberOfPages {
+            UIGraphicsBeginPDFPage()
+            printPageRenderer.drawPage(at: i, in: UIGraphicsGetPDFContextBounds())
+        }
         
         UIGraphicsEndPDFContext()
         
